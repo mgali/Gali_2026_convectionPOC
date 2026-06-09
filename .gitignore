@@ -1,0 +1,10 @@
+input_data/
+output/
+*.zip
+*.nc
+*.Rda
+*.rds
+*.csv
+*.xlsx
+*.txt
+.DS_Store

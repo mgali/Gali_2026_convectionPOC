@@ -1,0 +1,19 @@
+ ! NOAA/PMEL TMAP
+ ! FERRET v6.93  
+ ! Linux 3.16.7-24-desktop 64-bit - 10/06/15
+ !  4-Jul-24 20:33     
+
+use "/esarchive/scratch/aorihuel/BUDGETS_LB_IR/large_POC_budgets/diag_a683/yr_files/2010/sp_average/aLAB_IR/bathy_depth_int/epipelagic/tottrdldetoc_a683_sp_average_IR_LAB_0_100_epipelagic.nc"
+use "/esarchive/scratch/aorihuel/BUDGETS_LB_IR/large_POC_budgets/diag_a67o/yr_files/2010/sp_average/aLAB_IR/bathy_depth_int/epipelagic/tottrdldetoc_a67o_sp_average_IR_LAB_0_100_epipelagic.nc"
+sh d
+set w 1
+plot TOTTRDLDETOC[d=2],TOTTRDLDETOC[d=1]
+plot TOTTRDLDETOC[d=2]*1000*86400,TOTTRDLDETOC[d=1]*1000*86400
+use "/esarchive/scratch/aorihuel/BUDGETS_LB_IR/large_POC_budgets/diag_a67o/yr_files/2015/sp_average/aLAB_IR/bathy_depth_int/epipelagic/tottrdldetoc_a67o_sp_average_IR_LAB_0_100_epipelagic.nc"
+use "/esarchive/scratch/aorihuel/BUDGETS_LB_IR/large_POC_budgets/diag_a683/yr_files/2015/sp_average/aLAB_IR/bathy_depth_int/epipelagic/tottrdldetoc_a683_sp_average_IR_LAB_0_100_epipelagic.nc"
+set w 2
+plot TOTTRDLDETOC[d=3],TOTTRDLDETOC[d=4]
+plot TOTTRDLDETOC[d=3]*1000*86400,TOTTRDLDETOC[d=4]*1000*86400
+plot TOTTRDLDETOC[d=2]*1000*86400,TOTTRDLDETOC[d=3]*1000*86400
+plot TOTTRDLDETOC[d=2]*1000*86400,TOTTRDLDETOC[d=3]*1000*86400, TOTTRDLDETOC[d=1]*1000*86400, TOTTRDLDETOC[d=4]*1000*86400
+exit
