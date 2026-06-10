@@ -79,6 +79,8 @@ Figure-generation scripts
 - Reproduces Fig. S20
 - Developed with R 4.3.3
 
+./f_*.R
+- Generic functions called in many scripts
 
 Notes
 =====
