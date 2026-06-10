@@ -22,7 +22,7 @@ library(fields)
 # Select outputs
 fig_convfluxes <- T           # Figure 4 of POC convection paper
 sfig_sections_map <- T        # Figure 16A of POC convection paper
-scheme_budgets <- F           # Figure 5 of POC convection paper
+scheme_budgets <- T           # Figure 5 of POC convection paper
 if (scheme_budgets) {
   fig_dcv_budget <- T
   fig_convfluxes <- F
@@ -58,7 +58,7 @@ varnames.conc <- unlist(strsplit(x = "phymisc.phydiat.zmicro.zmeso.sdetoc.ldetoc
 varnames.conc <- sapply(varnames.conc, function(x) paste0("conc_",x))
 varnames.phy2D <- unlist(strsplit(x = "omlda.omldamax.mlotst.mlotstmax.tos.sos.taum",
                                   split = ".", fixed = T))
-varnames.bgc2D <- unlist(strsplit(x = "dmpphymisc.dmpphydiat.fgco2.intpp",
+varnames.bgc2D <- unlist(strsplit(x = "dmpphymisc.dmpphydiat.intpp",
                                   split = ".", fixed = T))
 # Base paths
 mbasepath <- "~/Desktop/Gali_2026_convectionPOC/input_data/fig_4_5_S14-16_nemo-pisces/"
@@ -77,12 +77,12 @@ f_load_3D_variables <- function(expid, mbasepath, dirname, varnames, search_patt
   
   # Load preprocessed files with specific season selected?
   ncfileS <- list.files(paste0(mbasepath, expid, "/", dirname), pattern = search_pattern, full.names = T)
-  print(ncfileS)
+  # print(ncfileS) # debugging
   
   # Load into list
   datalist <- lapply(varnames, function(vv) {
     fname <- grep(pattern = vv, x = ncfileS, value = T)
-    print(paste0("Loading ",vv))
+    # print(paste0("Loading ",vv)) # debugging
     ncfile <- open.nc(fname)
     return( var.get.nc(ncfile, variable = gsub("conc_","",vv)) )
     close.nc(ncfile)
@@ -95,7 +95,7 @@ f_load_2D_variables <- function(expid, mbasepath, dirname, varnames, search_patt
     fname <- grep(pattern = vv,
                   x = list.files(paste0(mbasepath, expid, "/", dirname), pattern = search_pattern, full.names = T),
                   value = T)
-    print(fname) # for debugging
+    # print(fname) # debugging
     ncfile <- open.nc(fname)
     return( var.get.nc(ncfile, variable = vv) ) # all fluxes are defined + downwards. CHECKED
     close.nc(ncfile)
@@ -244,8 +244,8 @@ moSpre <- list() # monthly data for annual maximum mlotstmax and omldamax
 for (nn in names(expidS)) {
   
   expid <- expidS[[nn]]
-  print(nn)
-  print(expid)
+  # print(nn) # debugging
+  # print(expid)
   
   # If experiment older than a67o, use older reference a5gj for physical fields. Else, use a67o
   findREF <- (sort(c("a67o",expid)))[1]
@@ -1084,6 +1084,13 @@ if (scheme_budgets) {
   t.test(x = budget$REF2$poc2doc[budget$REF2$Year%in%allperiods$weak3], y = budget$REF2$poc2doc[budget$REF2$Year%in%allperiods$strong3])
   t.test(x = budget$M2hD3h$poc2doc[budget$M2hD3h$Year%in%allperiods$weak3], y = budget$M2hD3h$poc2doc[budget$M2hD3h$Year%in%allperiods$strong3])
   
+  # CO2 flux (a67o only)
+  S_fgco2 <- f_load_2D_variables("a67o", mbasepath, dirname = "year", "fgco2", search_pattern = "12.nc")
+  S_fgco2 <- f_xyzt_xysum_mask(Lxyzt = S_fgco2, MASK = smask[[regname]])
+  fgco2 <- data.frame(Year = 1958:2019,
+                      fgco2 = unlist(S_fgco2$fgco2*86400*365*1e-9)) # from kg/s to TgC/yr
+  t.test(x = fgco2$fgco2[fgco2$Year%in%allperiods$weak3], y = fgco2$fgco2[fgco2$Year%in%allperiods$strong3])
+  
   
   fit_dcv <- lapply(budget, function(x) {
     linfit <- lm(zdfpoc ~ DCV, data = x)
@@ -1176,30 +1183,32 @@ if (scheme_budgets) {
   # ---------------------------------------- Summarize data for Fig. 5B -----------------------------------------
   # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  summary_table <- map_dfr(names(budget), function(sim) {
+  # POC budgets
+  summary_table <- map_dfr(names(budget), function(xx) {
     
-    df <- budget[[sim]]
+    dfb <- budget[[xx]]
     
     numvars <- setdiff(
-      names(df)[sapply(df, is.numeric)],
+      names(dfb)[sapply(dfb, is.numeric)],
       "Year"
     )
+    print(numvars)
     
     get_stats <- function(dfsub, period) {
       
       out <- data.frame(
-        Simulation = sim,
+        Simulation = xx,
         Period = period
       )
-      for(v in numvars) {
-        out[[paste0(v, "_mean")]] <- mean(dfsub[[v]], na.rm = TRUE)
-        out[[paste0(v, "_sd")]]   <- sd(dfsub[[v]], na.rm = TRUE)
+      for(vv in numvars) {
+        out[[paste0(vv, "_mean")]] <- mean(dfsub[[vv]], na.rm = TRUE)
+        out[[paste0(vv, "_sd")]]   <- sd(dfsub[[vv]], na.rm = TRUE)
       }
       out
     }
     bind_rows(
-      get_stats(filter(df, Year %in% allperiods$weak3), "2009-2013"),
-      get_stats(filter(df, Year %in% allperiods$strong3), "2014-2018")
+      get_stats(filter(dfb, Year %in% allperiods$weak3), "2009-2013"),
+      get_stats(filter(dfb, Year %in% allperiods$strong3), "2014-2018")
     )
   })
   
